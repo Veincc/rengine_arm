@@ -2454,7 +2454,7 @@ def xray_scan(self, urls=[], ctx={}, description=None):
             history_file=self.history_file,
             scan_id=self.scan_id,
             activity_id=self.activity_id,
-            cwd='/usr/src/github/xray/'
+            cwd='/usr/src/github/xray/'	#Xray dir
         )
         if not os.path.isfile(output_file):
             logger.info('No vulns')
