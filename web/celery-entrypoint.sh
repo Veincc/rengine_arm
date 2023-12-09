@@ -35,11 +35,11 @@ then
   mkdir /usr/src/wordlist
 fi
 
-if [ ! -f "/usr/src/wordlist/" ]
-then
-  echo "Downloading Default Directory Bruteforce Wordlist"
-  wget https://raw.githubusercontent.com/maurosoria/dirsearch/master/db/dicc.txt -O /usr/src/wordlist/dicc.txt
-fi
+#if [ ! -f "/usr/src/wordlist/" ]
+#then
+#  echo "Downloading Default Directory Bruteforce Wordlist"
+#  wget https://raw.githubusercontent.com/maurosoria/dirsearch/master/db/dicc.txt -O /usr/src/wordlist/dicc.txt
+#fi
 
 # check if default wordlist for amass exists
 if [ ! -f /usr/src/wordlist/deepmagic.com-prefixes-top50000.txt ];
