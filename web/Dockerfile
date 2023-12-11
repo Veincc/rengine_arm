@@ -43,9 +43,23 @@ RUN apt install -y  --no-install-recommends \
     x11-utils \
     xvfb \
     wget \
+    unzip \
     curl \
     python3-netaddr \
     software-properties-common
+
+# Get Xray
+ARG XRAY_VERSION=1.9.11
+RUN wget https://github.com/chaitin/xray/releases/download/${XRAY_VERSION}/xray_linux_amd64.zip \
+    && unzip xray_linux_amd64.zip \
+    && mv xray_linux_amd64 /usr/src/github/xray/xray \
+    && rm xray_linux_amd64.zip
+RUN chmod +x /usr/src/github/xray/xray
+
+# Generate xray.yaml/module.xray.yaml/plugin.xray.yaml
+RUN /usr/src/github/xray/xray
+# Generate default configurations to config.yaml
+RUN /usr/src/github/xray/xray
 
 RUN add-apt-repository ppa:mozillateam/ppa
 
