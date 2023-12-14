@@ -2421,13 +2421,9 @@ def xray_scan(self, urls=[], ctx={}, description=None):
     vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
     should_fetch_gpt_report = vuln_config.get(FETCH_GPT_REPORT, DEFAULT_GET_GPT_REPORT)
 
-    input_path = f'{self.results_dir}/urls_unfurled.txt'
+    input_path = f'{self.results_dir}/input_endpoints_vulnerability_scan.txt'
     output_file = f'{self.results_dir}/vuln.json'
-    history_file = f'{self.results_dir}/commands.txt'
 
-    # input_path = '/tmp/1.txt'
-    # output_file = '/tmp/vuln.json'
-    # history_file = '/tmp/commands.txt'
 
     if urls:
         with open(input_path, 'w') as f:
@@ -2440,15 +2436,16 @@ def xray_scan(self, urls=[], ctx={}, description=None):
             ctx=ctx
         )
 
-    with open(input_path, 'r') as f:
-        target = f.readline()
-    # target = self.domain
-
-    cmd = './xray --log-level fatal webscan'
-    cmd += f' --basic-crawler {target}'
-    cmd += f' --plugins sqldet,xss'
-    cmd += f' --json-output {output_file}'
-    # print(cmd)
+    # with open(input_path, 'r') as f:
+    #     target = f.readline()
+    # cmd = './xray --log-level fatal webscan'
+    # cmd += f' --basic-crawler {target}'
+    # cmd += f' --plugins sqldet,xss'
+    # cmd += f' --json-output {output_file}'
+    
+    cmd = 'python3 run_scan.py'
+    cmd += f' --file {input_path}'
+    cmd += f' --output {output_file}'
     results = []
     try:
         run_command(
@@ -2456,7 +2453,8 @@ def xray_scan(self, urls=[], ctx={}, description=None):
             history_file=self.history_file,
             scan_id=self.scan_id,
             activity_id=self.activity_id,
-            cwd='/usr/src/github/xray/'	#Xray dir
+            shell=True,
+            cwd='/usr/src/github/xray/'	#xray and crawlergo dir
         )
         if not os.path.isfile(output_file):
             logger.info('No vulns')
@@ -2510,7 +2508,7 @@ def xray_scan(self, urls=[], ctx={}, description=None):
         logger.exception(e)
     return results
 
-
+    
 @app.task(name='dalfox_xss_scan', queue='main_scan_queue', base=RengineTask, bind=True)
 def dalfox_xss_scan(self, urls=[], ctx={}, description=None):
     """XSS Scan using dalfox
