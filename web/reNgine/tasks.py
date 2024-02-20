@@ -813,11 +813,10 @@ def dorking(config, host, scan_history_id, results_dir):
 
             elif dork == 'social_media':
                 social_websites = [
-                    'tiktok.com',
-                    'facebook.com',
-                    'twitter.com',
-                    'youtube.com',
-                    'reddit.com'
+                    'weibo.com',
+                    'bilibili.com',
+                    'xiaohongshu.com',
+                    'zhihu.com'
                 ]
                 for site in social_websites:
                     results = get_and_save_dork_results(
@@ -846,6 +845,7 @@ def dorking(config, host, scan_history_id, results_dir):
                 project_websites = [
                     'github.com',
                     'gitlab.com',
+                    'gitee.com',
                     'bitbucket.org'
                 ]
                 for site in project_websites:
@@ -871,7 +871,8 @@ def dorking(config, host, scan_history_id, results_dir):
                     'ora',
                     'txt',
                     'cfg',
-                    'ini'
+                    'ini',
+                    'config'
                 ]
                 results = get_and_save_dork_results(
                     lookup_target=host,
@@ -965,7 +966,8 @@ def dorking(config, host, scan_history_id, results_dir):
                     'sql',
                     'db',
                     'dbf',
-                    'mdb'
+                    'mdb',
+                    'dump'
                 ]
                 results = get_and_save_dork_results(
                     lookup_target=host,
@@ -1766,7 +1768,7 @@ def fetch_url(self, urls=[], ctx={}, description=None):
     # Tools cmds
     cmd_map = {
         'gau': f'gau',
-        'gauplus': f'gauplus -random-agent',
+        # 'gauplus': f'gauplus -random-agent',
         'hakrawler': 'hakrawler -subs -u',
         'waybackurls': 'waybackurls',
         'gospider': f'gospider -S {input_path} --js -d 2 --sitemap --robots -w -r',
@@ -1774,13 +1776,13 @@ def fetch_url(self, urls=[], ctx={}, description=None):
     }
     if proxy:
         cmd_map['gau'] += f' --proxy "{proxy}"'
-        cmd_map['gauplus'] += f' -p "{proxy}"'
+        # cmd_map['gauplus'] += f' -p "{proxy}"'
         cmd_map['gospider'] += f' -p {proxy}'
         cmd_map['hakrawler'] += f' -proxy {proxy}'
         cmd_map['katana'] += f' -proxy {proxy}'
     if threads > 0:
         cmd_map['gau'] += f' --threads {threads}'
-        cmd_map['gauplus'] += f' -t {threads}'
+        # cmd_map['gauplus'] += f' -t {threads}'
         cmd_map['gospider'] += f' -t {threads}'
         cmd_map['katana'] += f' -c {threads}'
     if custom_header:
@@ -1973,9 +1975,9 @@ def vulnerability_scan(self, urls=[], ctx={}, description=None):
     config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
     should_run_nuclei = config.get(RUN_NUCLEI, True)
     should_run_xray = config.get(RUN_XRAY, True)
-    should_run_crlfuzz = config.get(RUN_CRLFUZZ, False)
-    should_run_dalfox = config.get(RUN_DALFOX, False)
-    should_run_s3scanner = config.get(RUN_S3SCANNER, True)
+    # should_run_crlfuzz = config.get(RUN_CRLFUZZ, False)
+    # should_run_dalfox = config.get(RUN_DALFOX, False)
+    # should_run_s3scanner = config.get(RUN_S3SCANNER, False)
 
     grouped_tasks = []
     if should_run_nuclei:
@@ -1994,28 +1996,28 @@ def vulnerability_scan(self, urls=[], ctx={}, description=None):
         )
         grouped_tasks.append(_task)
 
-    if should_run_crlfuzz:
-        _task = crlfuzz_scan.si(
-            urls=urls,
-            ctx=ctx,
-            description=f'CRLFuzz Scan'
-        )
-        grouped_tasks.append(_task)
+    # if should_run_crlfuzz:
+    #     _task = crlfuzz_scan.si(
+    #         urls=urls,
+    #         ctx=ctx,
+    #         description=f'CRLFuzz Scan'
+    #     )
+    #     grouped_tasks.append(_task)
 
-    if should_run_dalfox:
-        _task = dalfox_xss_scan.si(
-            urls=urls,
-            ctx=ctx,
-            description=f'Dalfox XSS Scan'
-        )
-        grouped_tasks.append(_task)
+    # if should_run_dalfox:
+    #     _task = dalfox_xss_scan.si(
+    #         urls=urls,
+    #         ctx=ctx,
+    #         description=f'Dalfox XSS Scan'
+    #     )
+    #     grouped_tasks.append(_task)
 
-    if should_run_s3scanner:
-        _task = s3scanner.si(
-            ctx=ctx,
-            description=f'Misconfigured S3 Buckets Scanner'
-        )
-        grouped_tasks.append(_task)
+    # if should_run_s3scanner:
+    #     _task = s3scanner.si(
+    #         ctx=ctx,
+    #         description=f'Misconfigured S3 Buckets Scanner'
+    #     )
+    #     grouped_tasks.append(_task)
 
     celery_group = group(grouped_tasks)
     job = celery_group.apply_async()
@@ -2454,7 +2456,7 @@ def xray_scan(self, urls=[], ctx={}, description=None):
             scan_id=self.scan_id,
             activity_id=self.activity_id,
             shell=True,
-            cwd='/usr/src/github/xray/'	#xray and crawlergo dir
+            cwd='/app/xray/'	#xray and crawlergo dir
         )
         if not os.path.isfile(output_file):
             logger.info('No vulns')
@@ -2463,7 +2465,6 @@ def xray_scan(self, urls=[], ctx={}, description=None):
         # Parse output json file
         with open(output_file, 'r') as file:
             xray_json = json.load(file)
-        print("Number of elements in xray_json:", len(xray_json))
 
         for item in xray_json:
             http_url = sanitize_url(item.get('target').get('url'))
@@ -2509,283 +2510,283 @@ def xray_scan(self, urls=[], ctx={}, description=None):
     return results
 
     
-@app.task(name='dalfox_xss_scan', queue='main_scan_queue', base=RengineTask, bind=True)
-def dalfox_xss_scan(self, urls=[], ctx={}, description=None):
-    """XSS Scan using dalfox
-
-	Args:
-		urls (list, optional): If passed, filter on those URLs.
-		description (str, optional): Task description shown in UI.
-	"""
-    vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
-    should_fetch_gpt_report = vuln_config.get(FETCH_GPT_REPORT, DEFAULT_GET_GPT_REPORT)
-    dalfox_config = vuln_config.get(DALFOX) or {}
-    custom_header = dalfox_config.get(CUSTOM_HEADER) or self.yaml_configuration.get(CUSTOM_HEADER)
-    proxy = get_random_proxy()
-    is_waf_evasion = dalfox_config.get(WAF_EVASION, False)
-    blind_xss_server = dalfox_config.get(BLIND_XSS_SERVER)
-    user_agent = dalfox_config.get(USER_AGENT) or self.yaml_configuration.get(USER_AGENT)
-    timeout = dalfox_config.get(TIMEOUT)
-    delay = dalfox_config.get(DELAY)
-    threads = dalfox_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
-    input_path = f'{self.results_dir}/input_endpoints_dalfox_xss.txt'
-
-    if urls:
-        with open(input_path, 'w') as f:
-            f.write('\n'.join(urls))
-    else:
-        get_http_urls(
-            is_alive=False,
-            ignore_files=False,
-            write_filepath=input_path,
-            ctx=ctx
-        )
-
-    notif = Notification.objects.first()
-    send_status = notif.send_scan_status_notif if notif else False
-
-    # command builder
-    cmd = 'dalfox --silence --no-color --no-spinner'
-    cmd += f' --only-poc r '
-    cmd += f' --ignore-return 302,404,403'
-    cmd += f' --skip-bav'
-    cmd += f' file {input_path}'
-    cmd += f' --proxy {proxy}' if proxy else ''
-    cmd += f' --waf-evasion' if is_waf_evasion else ''
-    cmd += f' -b {blind_xss_server}' if blind_xss_server else ''
-    cmd += f' --delay {delay}' if delay else ''
-    cmd += f' --timeout {timeout}' if timeout else ''
-    cmd += f' --user-agent {user_agent}' if user_agent else ''
-    cmd += f' --header {custom_header}' if custom_header else ''
-    cmd += f' --worker {threads}' if threads else ''
-    cmd += f' --format json'
-
-    results = []
-    for line in stream_command(
-            cmd,
-            history_file=self.history_file,
-            scan_id=self.scan_id,
-            activity_id=self.activity_id,
-            trunc_char=','
-    ):
-        if not isinstance(line, dict):
-            continue
-
-        results.append(line)
-
-        vuln_data = parse_dalfox_result(line)
-
-        http_url = sanitize_url(line.get('data'))
-        subdomain_name = get_subdomain_from_url(http_url)
-
-        # TODO: this should be get only
-        subdomain, _ = Subdomain.objects.get_or_create(
-            name=subdomain_name,
-            scan_history=self.scan,
-            target_domain=self.domain
-        )
-        endpoint, _ = save_endpoint(
-            http_url,
-            crawl=True,
-            subdomain=subdomain,
-            ctx=ctx
-        )
-        if endpoint:
-            http_url = endpoint.http_url
-            endpoint.save()
-
-        vuln, _ = save_vulnerability(
-            target_domain=self.domain,
-            http_url=http_url,
-            scan_history=self.scan,
-            subscan=self.subscan,
-            **vuln_data
-        )
-
-        if not vuln:
-            continue
-
-    # after vulnerability scan is done, we need to run gpt if
-    # should_fetch_gpt_report and openapi key exists
-
-    if should_fetch_gpt_report and OpenAiAPIKey.objects.all().first():
-        logger.info('Getting Dalfox Vulnerability GPT Report')
-        vulns = Vulnerability.objects.filter(
-            scan_history__id=self.scan_id
-        ).filter(
-            source=DALFOX
-        ).exclude(
-            severity=0
-        )
-
-        _vulns = []
-        for vuln in vulns:
-            _vulns.append((vuln.name, vuln.http_url))
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_THREADS) as executor:
-            future_to_gpt = {executor.submit(get_vulnerability_gpt_report, vuln): vuln for vuln in _vulns}
-
-            # Wait for all tasks to complete
-            for future in concurrent.futures.as_completed(future_to_gpt):
-                gpt = future_to_gpt[future]
-                try:
-                    future.result()
-                except Exception as e:
-                    logger.error(f"Exception for Vulnerability {vuln}: {e}")
-    return results
-
-
-@app.task(name='crlfuzz_scan', queue='main_scan_queue', base=RengineTask, bind=True)
-def crlfuzz_scan(self, urls=[], ctx={}, description=None):
-    """CRLF Fuzzing with CRLFuzz
-
-	Args:
-		urls (list, optional): If passed, filter on those URLs.
-		description (str, optional): Task description shown in UI.
-	"""
-    vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
-    should_fetch_gpt_report = vuln_config.get(FETCH_GPT_REPORT, DEFAULT_GET_GPT_REPORT)
-    custom_header = vuln_config.get(CUSTOM_HEADER) or self.yaml_configuration.get(CUSTOM_HEADER)
-    proxy = get_random_proxy()
-    user_agent = vuln_config.get(USER_AGENT) or self.yaml_configuration.get(USER_AGENT)
-    threads = vuln_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
-    input_path = f'{self.results_dir}/input_endpoints_crlf.txt'
-    output_path = f'{self.results_dir}/{self.filename}'
-
-    if urls:
-        with open(input_path, 'w') as f:
-            f.write('\n'.join(urls))
-    else:
-        get_http_urls(
-            is_alive=False,
-            ignore_files=True,
-            write_filepath=input_path,
-            ctx=ctx
-        )
-
-    notif = Notification.objects.first()
-    send_status = notif.send_scan_status_notif if notif else False
-
-    # command builder
-    cmd = 'crlfuzz -s'
-    cmd += f' -l {input_path}'
-    cmd += f' -x {proxy}' if proxy else ''
-    cmd += f' --H {custom_header}' if custom_header else ''
-    cmd += f' -o {output_path}'
-
-    run_command(
-        cmd,
-        shell=False,
-        history_file=self.history_file,
-        scan_id=self.scan_id,
-        activity_id=self.activity_id
-    )
-
-    if not os.path.isfile(output_path):
-        logger.info('No Results from CRLFuzz')
-        return
-
-    crlfs = []
-    results = []
-    with open(output_path, 'r') as file:
-        crlfs = file.readlines()
-
-    for crlf in crlfs:
-        url = crlf.strip()
-
-        vuln_data = parse_crlfuzz_result(url)
-
-        http_url = sanitize_url(url)
-        subdomain_name = get_subdomain_from_url(http_url)
-
-        subdomain, _ = Subdomain.objects.get_or_create(
-            name=subdomain_name,
-            scan_history=self.scan,
-            target_domain=self.domain
-        )
-
-        endpoint, _ = save_endpoint(
-            http_url,
-            crawl=True,
-            subdomain=subdomain,
-            ctx=ctx
-        )
-        if endpoint:
-            http_url = endpoint.http_url
-            endpoint.save()
-
-        vuln, _ = save_vulnerability(
-            target_domain=self.domain,
-            http_url=http_url,
-            scan_history=self.scan,
-            subscan=self.subscan,
-            **vuln_data
-        )
-
-        if not vuln:
-            continue
-
-    # after vulnerability scan is done, we need to run gpt if
-    # should_fetch_gpt_report and openapi key exists
-
-    if should_fetch_gpt_report and OpenAiAPIKey.objects.all().first():
-        logger.info('Getting CRLFuzz Vulnerability GPT Report')
-        vulns = Vulnerability.objects.filter(
-            scan_history__id=self.scan_id
-        ).filter(
-            source=CRLFUZZ
-        ).exclude(
-            severity=0
-        )
-
-        _vulns = []
-        for vuln in vulns:
-            _vulns.append((vuln.name, vuln.http_url))
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_THREADS) as executor:
-            future_to_gpt = {executor.submit(get_vulnerability_gpt_report, vuln): vuln for vuln in _vulns}
-
-            # Wait for all tasks to complete
-            for future in concurrent.futures.as_completed(future_to_gpt):
-                gpt = future_to_gpt[future]
-                try:
-                    future.result()
-                except Exception as e:
-                    logger.error(f"Exception for Vulnerability {vuln}: {e}")
-
-    return results
+# @app.task(name='dalfox_xss_scan', queue='main_scan_queue', base=RengineTask, bind=True)
+# def dalfox_xss_scan(self, urls=[], ctx={}, description=None):
+#     """XSS Scan using dalfox
+#
+# 	Args:
+# 		urls (list, optional): If passed, filter on those URLs.
+# 		description (str, optional): Task description shown in UI.
+# 	"""
+#     vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
+#     should_fetch_gpt_report = vuln_config.get(FETCH_GPT_REPORT, DEFAULT_GET_GPT_REPORT)
+#     dalfox_config = vuln_config.get(DALFOX) or {}
+#     custom_header = dalfox_config.get(CUSTOM_HEADER) or self.yaml_configuration.get(CUSTOM_HEADER)
+#     proxy = get_random_proxy()
+#     is_waf_evasion = dalfox_config.get(WAF_EVASION, False)
+#     blind_xss_server = dalfox_config.get(BLIND_XSS_SERVER)
+#     user_agent = dalfox_config.get(USER_AGENT) or self.yaml_configuration.get(USER_AGENT)
+#     timeout = dalfox_config.get(TIMEOUT)
+#     delay = dalfox_config.get(DELAY)
+#     threads = dalfox_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
+#     input_path = f'{self.results_dir}/input_endpoints_dalfox_xss.txt'
+#
+#     if urls:
+#         with open(input_path, 'w') as f:
+#             f.write('\n'.join(urls))
+#     else:
+#         get_http_urls(
+#             is_alive=False,
+#             ignore_files=False,
+#             write_filepath=input_path,
+#             ctx=ctx
+#         )
+#
+#     notif = Notification.objects.first()
+#     send_status = notif.send_scan_status_notif if notif else False
+#
+#     # command builder
+#     cmd = 'dalfox --silence --no-color --no-spinner'
+#     cmd += f' --only-poc r '
+#     cmd += f' --ignore-return 302,404,403'
+#     cmd += f' --skip-bav'
+#     cmd += f' file {input_path}'
+#     cmd += f' --proxy {proxy}' if proxy else ''
+#     cmd += f' --waf-evasion' if is_waf_evasion else ''
+#     cmd += f' -b {blind_xss_server}' if blind_xss_server else ''
+#     cmd += f' --delay {delay}' if delay else ''
+#     cmd += f' --timeout {timeout}' if timeout else ''
+#     cmd += f' --user-agent {user_agent}' if user_agent else ''
+#     cmd += f' --header {custom_header}' if custom_header else ''
+#     cmd += f' --worker {threads}' if threads else ''
+#     cmd += f' --format json'
+#
+#     results = []
+#     for line in stream_command(
+#             cmd,
+#             history_file=self.history_file,
+#             scan_id=self.scan_id,
+#             activity_id=self.activity_id,
+#             trunc_char=','
+#     ):
+#         if not isinstance(line, dict):
+#             continue
+#
+#         results.append(line)
+#
+#         vuln_data = parse_dalfox_result(line)
+#
+#         http_url = sanitize_url(line.get('data'))
+#         subdomain_name = get_subdomain_from_url(http_url)
+#
+#         # TODO: this should be get only
+#         subdomain, _ = Subdomain.objects.get_or_create(
+#             name=subdomain_name,
+#             scan_history=self.scan,
+#             target_domain=self.domain
+#         )
+#         endpoint, _ = save_endpoint(
+#             http_url,
+#             crawl=True,
+#             subdomain=subdomain,
+#             ctx=ctx
+#         )
+#         if endpoint:
+#             http_url = endpoint.http_url
+#             endpoint.save()
+#
+#         vuln, _ = save_vulnerability(
+#             target_domain=self.domain,
+#             http_url=http_url,
+#             scan_history=self.scan,
+#             subscan=self.subscan,
+#             **vuln_data
+#         )
+#
+#         if not vuln:
+#             continue
+#
+#     # after vulnerability scan is done, we need to run gpt if
+#     # should_fetch_gpt_report and openapi key exists
+#
+#     if should_fetch_gpt_report and OpenAiAPIKey.objects.all().first():
+#         logger.info('Getting Dalfox Vulnerability GPT Report')
+#         vulns = Vulnerability.objects.filter(
+#             scan_history__id=self.scan_id
+#         ).filter(
+#             source=DALFOX
+#         ).exclude(
+#             severity=0
+#         )
+#
+#         _vulns = []
+#         for vuln in vulns:
+#             _vulns.append((vuln.name, vuln.http_url))
+#
+#         with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_THREADS) as executor:
+#             future_to_gpt = {executor.submit(get_vulnerability_gpt_report, vuln): vuln for vuln in _vulns}
+#
+#             # Wait for all tasks to complete
+#             for future in concurrent.futures.as_completed(future_to_gpt):
+#                 gpt = future_to_gpt[future]
+#                 try:
+#                     future.result()
+#                 except Exception as e:
+#                     logger.error(f"Exception for Vulnerability {vuln}: {e}")
+#     return results
 
 
-@app.task(name='s3scanner', queue='main_scan_queue', base=RengineTask, bind=True)
-def s3scanner(self, ctx={}, description=None):
-    """Bucket Scanner
+# @app.task(name='crlfuzz_scan', queue='main_scan_queue', base=RengineTask, bind=True)
+# def crlfuzz_scan(self, urls=[], ctx={}, description=None):
+#     """CRLF Fuzzing with CRLFuzz
+#
+# 	Args:
+# 		urls (list, optional): If passed, filter on those URLs.
+# 		description (str, optional): Task description shown in UI.
+# 	"""
+#     vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
+#     should_fetch_gpt_report = vuln_config.get(FETCH_GPT_REPORT, DEFAULT_GET_GPT_REPORT)
+#     custom_header = vuln_config.get(CUSTOM_HEADER) or self.yaml_configuration.get(CUSTOM_HEADER)
+#     proxy = get_random_proxy()
+#     user_agent = vuln_config.get(USER_AGENT) or self.yaml_configuration.get(USER_AGENT)
+#     threads = vuln_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
+#     input_path = f'{self.results_dir}/input_endpoints_crlf.txt'
+#     output_path = f'{self.results_dir}/{self.filename}'
+#
+#     if urls:
+#         with open(input_path, 'w') as f:
+#             f.write('\n'.join(urls))
+#     else:
+#         get_http_urls(
+#             is_alive=False,
+#             ignore_files=True,
+#             write_filepath=input_path,
+#             ctx=ctx
+#         )
+#
+#     notif = Notification.objects.first()
+#     send_status = notif.send_scan_status_notif if notif else False
+#
+#     # command builder
+#     cmd = 'crlfuzz -s'
+#     cmd += f' -l {input_path}'
+#     cmd += f' -x {proxy}' if proxy else ''
+#     cmd += f' --H {custom_header}' if custom_header else ''
+#     cmd += f' -o {output_path}'
+#
+#     run_command(
+#         cmd,
+#         shell=False,
+#         history_file=self.history_file,
+#         scan_id=self.scan_id,
+#         activity_id=self.activity_id
+#     )
+#
+#     if not os.path.isfile(output_path):
+#         logger.info('No Results from CRLFuzz')
+#         return
+#
+#     crlfs = []
+#     results = []
+#     with open(output_path, 'r') as file:
+#         crlfs = file.readlines()
+#
+#     for crlf in crlfs:
+#         url = crlf.strip()
+#
+#         vuln_data = parse_crlfuzz_result(url)
+#
+#         http_url = sanitize_url(url)
+#         subdomain_name = get_subdomain_from_url(http_url)
+#
+#         subdomain, _ = Subdomain.objects.get_or_create(
+#             name=subdomain_name,
+#             scan_history=self.scan,
+#             target_domain=self.domain
+#         )
+#
+#         endpoint, _ = save_endpoint(
+#             http_url,
+#             crawl=True,
+#             subdomain=subdomain,
+#             ctx=ctx
+#         )
+#         if endpoint:
+#             http_url = endpoint.http_url
+#             endpoint.save()
+#
+#         vuln, _ = save_vulnerability(
+#             target_domain=self.domain,
+#             http_url=http_url,
+#             scan_history=self.scan,
+#             subscan=self.subscan,
+#             **vuln_data
+#         )
+#
+#         if not vuln:
+#             continue
+#
+#     # after vulnerability scan is done, we need to run gpt if
+#     # should_fetch_gpt_report and openapi key exists
+#
+#     if should_fetch_gpt_report and OpenAiAPIKey.objects.all().first():
+#         logger.info('Getting CRLFuzz Vulnerability GPT Report')
+#         vulns = Vulnerability.objects.filter(
+#             scan_history__id=self.scan_id
+#         ).filter(
+#             source=CRLFUZZ
+#         ).exclude(
+#             severity=0
+#         )
+#
+#         _vulns = []
+#         for vuln in vulns:
+#             _vulns.append((vuln.name, vuln.http_url))
+#
+#         with concurrent.futures.ThreadPoolExecutor(max_workers=DEFAULT_THREADS) as executor:
+#             future_to_gpt = {executor.submit(get_vulnerability_gpt_report, vuln): vuln for vuln in _vulns}
+#
+#             # Wait for all tasks to complete
+#             for future in concurrent.futures.as_completed(future_to_gpt):
+#                 gpt = future_to_gpt[future]
+#                 try:
+#                     future.result()
+#                 except Exception as e:
+#                     logger.error(f"Exception for Vulnerability {vuln}: {e}")
+#
+#     return results
 
-	Args:
-		ctx (dict): Context
-		description (str, optional): Task description shown in UI.
-	"""
-    input_path = f'{self.results_dir}/#{self.scan_id}_subdomain_discovery.txt'
-    vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
-    s3_config = vuln_config.get(S3SCANNER) or {}
-    threads = s3_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
-    providers = s3_config.get(PROVIDERS, S3SCANNER_DEFAULT_PROVIDERS)
-    scan_history = ScanHistory.objects.filter(pk=self.scan_id).first()
-    for provider in providers:
-        cmd = f's3scanner -bucket-file {input_path} -enumerate -provider {provider} -threads {threads} -json'
-        for line in stream_command(
-                cmd,
-                history_file=self.history_file,
-                scan_id=self.scan_id,
-                activity_id=self.activity_id):
 
-            if not isinstance(line, dict):
-                continue
-
-            if line.get('bucket', {}).get('exists', 0) == 1:
-                result = parse_s3scanner_result(line)
-                s3bucket, created = S3Bucket.objects.get_or_create(**result)
-                scan_history.buckets.add(s3bucket)
-                logger.info(f"s3 bucket added {result['provider']}-{result['name']}-{result['region']}")
+# @app.task(name='s3scanner', queue='main_scan_queue', base=RengineTask, bind=True)
+# def s3scanner(self, ctx={}, description=None):
+#     """Bucket Scanner
+#
+# 	Args:
+# 		ctx (dict): Context
+# 		description (str, optional): Task description shown in UI.
+# 	"""
+#     input_path = f'{self.results_dir}/#{self.scan_id}_subdomain_discovery.txt'
+#     vuln_config = self.yaml_configuration.get(VULNERABILITY_SCAN) or {}
+#     s3_config = vuln_config.get(S3SCANNER) or {}
+#     threads = s3_config.get(THREADS) or self.yaml_configuration.get(THREADS, DEFAULT_THREADS)
+#     providers = s3_config.get(PROVIDERS, S3SCANNER_DEFAULT_PROVIDERS)
+#     scan_history = ScanHistory.objects.filter(pk=self.scan_id).first()
+#     for provider in providers:
+#         cmd = f's3scanner -bucket-file {input_path} -enumerate -provider {provider} -threads {threads} -json'
+#         for line in stream_command(
+#                 cmd,
+#                 history_file=self.history_file,
+#                 scan_id=self.scan_id,
+#                 activity_id=self.activity_id):
+#
+#             if not isinstance(line, dict):
+#                 continue
+#
+#             if line.get('bucket', {}).get('exists', 0) == 1:
+#                 result = parse_s3scanner_result(line)
+#                 s3bucket, created = S3Bucket.objects.get_or_create(**result)
+#                 scan_history.buckets.add(s3bucket)
+#                 logger.info(f"s3 bucket added {result['provider']}-{result['name']}-{result['region']}")
 
 
 @app.task(name='http_crawl', queue='main_scan_queue', base=RengineTask, bind=True)
@@ -3524,30 +3525,30 @@ def cve_to_vuln(cve_id, vuln_type=''):
     return vuln
 
 
-def parse_s3scanner_result(line):
-    '''
-		Parses and returns s3Scanner Data
-	'''
-    bucket = line['bucket']
-    return {
-        'name': bucket['name'],
-        'region': bucket['region'],
-        'provider': bucket['provider'],
-        'owner_display_name': bucket['owner_display_name'],
-        'owner_id': bucket['owner_id'],
-        'perm_auth_users_read': bucket['perm_auth_users_read'],
-        'perm_auth_users_write': bucket['perm_auth_users_write'],
-        'perm_auth_users_read_acl': bucket['perm_auth_users_read_acl'],
-        'perm_auth_users_write_acl': bucket['perm_auth_users_write_acl'],
-        'perm_auth_users_full_control': bucket['perm_auth_users_full_control'],
-        'perm_all_users_read': bucket['perm_all_users_read'],
-        'perm_all_users_write': bucket['perm_all_users_write'],
-        'perm_all_users_read_acl': bucket['perm_all_users_read_acl'],
-        'perm_all_users_write_acl': bucket['perm_all_users_write_acl'],
-        'perm_all_users_full_control': bucket['perm_all_users_full_control'],
-        'num_objects': bucket['num_objects'],
-        'size': bucket['bucket_size']
-    }
+# def parse_s3scanner_result(line):
+#     '''
+# 		Parses and returns s3Scanner Data
+# 	'''
+#     bucket = line['bucket']
+#     return {
+#         'name': bucket['name'],
+#         'region': bucket['region'],
+#         'provider': bucket['provider'],
+#         'owner_display_name': bucket['owner_display_name'],
+#         'owner_id': bucket['owner_id'],
+#         'perm_auth_users_read': bucket['perm_auth_users_read'],
+#         'perm_auth_users_write': bucket['perm_auth_users_write'],
+#         'perm_auth_users_read_acl': bucket['perm_auth_users_read_acl'],
+#         'perm_auth_users_write_acl': bucket['perm_auth_users_write_acl'],
+#         'perm_auth_users_full_control': bucket['perm_auth_users_full_control'],
+#         'perm_all_users_read': bucket['perm_all_users_read'],
+#         'perm_all_users_write': bucket['perm_all_users_write'],
+#         'perm_all_users_read_acl': bucket['perm_all_users_read_acl'],
+#         'perm_all_users_write_acl': bucket['perm_all_users_write_acl'],
+#         'perm_all_users_full_control': bucket['perm_all_users_full_control'],
+#         'num_objects': bucket['num_objects'],
+#         'size': bucket['bucket_size']
+#     }
 
 
 def parse_nuclei_result(line):
@@ -3582,49 +3583,49 @@ def parse_nuclei_result(line):
     }
 
 
-def parse_dalfox_result(line):
-    """Parse results from nuclei JSON output.
-
-	Args:
-		line (dict): Nuclei JSON line output.
-
-	Returns:
-		dict: Vulnerability data.
-	"""
-
-    description = ''
-    description += f" Evidence: {line.get('evidence')} <br>" if line.get('evidence') else ''
-    description += f" Message: {line.get('message')} <br>" if line.get('message') else ''
-    description += f" Payload: {line.get('message_str')} <br>" if line.get('message_str') else ''
-    description += f" Vulnerable Parameter: {line.get('param')} <br>" if line.get('param') else ''
-
-    return {
-        'name': 'XSS (Cross Site Scripting)',
-        'type': 'XSS',
-        'severity': DALFOX_SEVERITY_MAP[line.get('severity', 'unknown')],
-        'description': description,
-        'source': DALFOX,
-        'cwe_ids': [line.get('cwe')]
-    }
-
-
-def parse_crlfuzz_result(url):
-    """Parse CRLF results
-
-	Args:
-		url (str): CRLF Vulnerable URL
-
-	Returns:
-		dict: Vulnerability data.
-	"""
-
-    return {
-        'name': 'CRLF (HTTP Response Splitting)',
-        'type': 'CRLF',
-        'severity': 2,
-        'description': 'A CRLF (HTTP Response Splitting) vulnerability has been discovered.',
-        'source': CRLFUZZ,
-    }
+# def parse_dalfox_result(line):
+#     """Parse results from nuclei JSON output.
+#
+# 	Args:
+# 		line (dict): Nuclei JSON line output.
+#
+# 	Returns:
+# 		dict: Vulnerability data.
+# 	"""
+#
+#     description = ''
+#     description += f" Evidence: {line.get('evidence')} <br>" if line.get('evidence') else ''
+#     description += f" Message: {line.get('message')} <br>" if line.get('message') else ''
+#     description += f" Payload: {line.get('message_str')} <br>" if line.get('message_str') else ''
+#     description += f" Vulnerable Parameter: {line.get('param')} <br>" if line.get('param') else ''
+#
+#     return {
+#         'name': 'XSS (Cross Site Scripting)',
+#         'type': 'XSS',
+#         'severity': DALFOX_SEVERITY_MAP[line.get('severity', 'unknown')],
+#         'description': description,
+#         'source': DALFOX,
+#         'cwe_ids': [line.get('cwe')]
+#     }
+#
+#
+# def parse_crlfuzz_result(url):
+#     """Parse CRLF results
+#
+# 	Args:
+# 		url (str): CRLF Vulnerable URL
+#
+# 	Returns:
+# 		dict: Vulnerability data.
+# 	"""
+#
+#     return {
+#         'name': 'CRLF (HTTP Response Splitting)',
+#         'type': 'CRLF',
+#         'severity': 2,
+#         'description': 'A CRLF (HTTP Response Splitting) vulnerability has been discovered.',
+#         'source': CRLFUZZ,
+#     }
 
 
 def record_exists(model, data, exclude_keys=[]):
