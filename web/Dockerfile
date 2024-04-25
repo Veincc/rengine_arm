@@ -16,11 +16,11 @@ ENV GOROOT="/usr/local/go"
 ENV GOPATH=$HOME/go
 ENV PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 
-#RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list
+RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 # Install Python
 RUN apt update -y && \
-    apt update -y && \
+    apt upgrade -y && \
     apt install -y \
     python3.10 \
     python3-dev \
@@ -107,8 +107,8 @@ RUN katana -up
 # Copy requirements
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip3 install --upgrade setuptools pip && \
-    pip3 install -r /tmp/requirements.txt
-#    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip3 install -r /tmp/requirements.txt \
+    -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # install eyewitness
 
@@ -116,8 +116,8 @@ RUN python3 -m pip install fuzzywuzzy \
     selenium==4.9.1 \
     python-Levenshtein \
     pyvirtualdisplay \
-    netaddr
-#    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    netaddr \
+    -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Copy source code
 COPY . /usr/src/app/
