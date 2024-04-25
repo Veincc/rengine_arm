@@ -46,15 +46,15 @@ then
 fi
 
 # get Xray
-if [ ! -d "/usr/src/github/Xray" ]
-then
-  echo "Get Xray and crawlergo"
-  git clone https://github.com/Veincc/Crawlergo_Xray_script /usr/src/github/Xray
-  wget https://github.com/chaitin/xray/releases/download/1.9.11/xray_linux_amd64.zip
-  unzip xray_linux_amd64.zip -d /usr/src/github/Xray
-  mv /usr/src/github/Xray/xray_linux_amd64 usr/src/github/Xray/xray
-  rm xray_linux_amd64.zip
-fi
+#if [ ! -d "/usr/src/github/Xray" ]
+#then
+#  echo "Get Xray and crawlergo"
+#  git clone https://github.com/Veincc/Crawlergo_Xray_script /usr/src/github/Xray
+#  wget https://github.com/chaitin/xray/releases/download/1.9.11/xray_linux_amd64.zip
+#  unzip xray_linux_amd64.zip -d /usr/src/github/Xray
+#  mv /usr/src/github/Xray/xray_linux_amd64 usr/src/github/Xray/xray
+#  rm xray_linux_amd64.zip
+#fi
 
 # clone Sublist3r
 if [ ! -d "/usr/src/github/Sublist3r" ]

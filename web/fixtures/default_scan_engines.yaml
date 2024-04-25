@@ -69,7 +69,7 @@
       \   'code_sharing',\r\n    'config_files',\r\n    'jenkins',\r\n    'wordpress_files',\r\n
       \   'php_error',\r\n    'exposed_documents',\r\n    'db_files',\r\n    'git_exposed'\r\n
       \ ],\r\n  'intensity': 'normal',\r\n  'documents_limit': 50\r\n}\r\nvulnerability_scan:
-      {\r\n  'run_nuclei': true,\r\n  'run_dalfox': true,\r\n  'run_crlfuzz': true,\r\n
+      {\r\n  'run_nuclei': true,\r\n  'run_xray': true,\r\n  'run_crlfuzz': true,\r\n
       \ 'enable_http_crawl': true,\r\n  'concurrency': 50,\r\n  'intensity': 'normal',\r\n
       \ 'rate_limit': 150,\r\n  'retries': 1,\r\n  'timeout': 5,\r\n  'fetch_gpt_report':
       true,\r\n  'nuclei': {\r\n    'use_nuclei_config': false,\r\n    'severities': ['unknown',

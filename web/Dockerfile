@@ -1,5 +1,5 @@
 # Base image
-FROM  ubuntu:22.04
+FROM  --platform=linux/amd64 ubuntu:22.04
 
 # Labels and Credits
 LABEL \
@@ -16,7 +16,7 @@ ENV GOROOT="/usr/local/go"
 ENV GOPATH=$HOME/go
 ENV PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 
-RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list
+#RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list
 
 # Install Python
 RUN apt update -y && \
@@ -43,6 +43,7 @@ RUN apt install -y  --no-install-recommends \
     x11-utils \
     xvfb \
     wget \
+    unzip \
     curl \
     python3-netaddr \
     software-properties-common
@@ -50,7 +51,11 @@ RUN apt install -y  --no-install-recommends \
 RUN add-apt-repository ppa:mozillateam/ppa
 
 # Download and install go 1.20
-RUN wget https://mirrors.aliyun.com/golang/go1.21.4.linux-amd64.tar.gz
+#RUN wget https://mirrors.aliyun.com/golang/go1.21.4.linux-amd64.tar.gz
+#RUN tar -xvf go1.21.4.linux-amd64.tar.gz
+#RUN rm go1.21.4.linux-amd64.tar.gz
+#RUN mv go /usr/local
+RUN wget https://golang.org/dl/go1.21.4.linux-amd64.tar.gz
 RUN tar -xvf go1.21.4.linux-amd64.tar.gz
 RUN rm go1.21.4.linux-amd64.tar.gz
 RUN mv go /usr/local
@@ -83,7 +88,7 @@ RUN go install -v github.com/jaeles-project/gospider@latest
 RUN go install -v github.com/owasp-amass/amass/v3/...@latest
 RUN go install -v github.com/ffuf/ffuf@latest
 RUN go install -v github.com/projectdiscovery/tlsx/cmd/tlsx@latest
-RUN go install -v github.com/hahwul/dalfox/v2@latest
+#RUN go install -v github.com/hahwul/dalfox/v2@latest
 RUN go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 RUN go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
 RUN go install -v github.com/sa7mon/s3scanner@latest
@@ -102,8 +107,8 @@ RUN katana -up
 # Copy requirements
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip3 install --upgrade setuptools pip && \
-    pip3 install -r /tmp/requirements.txt \
-    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip3 install -r /tmp/requirements.txt
+#    -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # install eyewitness
 
@@ -111,8 +116,8 @@ RUN python3 -m pip install fuzzywuzzy \
     selenium==4.9.1 \
     python-Levenshtein \
     pyvirtualdisplay \
-    netaddr \
-    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    netaddr
+#    -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # Copy source code
 COPY . /usr/src/app/
