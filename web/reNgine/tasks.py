@@ -816,7 +816,8 @@ def dorking(config, host, scan_history_id, results_dir):
                     'weibo.com',
                     'bilibili.com',
                     'xiaohongshu.com',
-                    'zhihu.com'
+                    'zhihu.com',
+                    'freebuf.com'
                 ]
                 for site in social_websites:
                     results = get_and_save_dork_results(

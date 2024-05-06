@@ -1,5 +1,5 @@
 # Base image
-FROM  --platform=linux/amd64 ubuntu:22.04
+FROM --platform=linux/arm64 ubuntu:22.04
 
 # Labels and Credits
 LABEL \
@@ -16,11 +16,9 @@ ENV GOROOT="/usr/local/go"
 ENV GOPATH=$HOME/go
 ENV PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 
-RUN sed -i 's/http:\/\/archive.ubuntu.com/http:\/\/mirrors.aliyun.com/g' /etc/apt/sources.list
-
 # Install Python
 RUN apt update -y && \
-    apt upgrade -y && \
+    apt upgrade -y \
     apt install -y \
     python3.10 \
     python3-dev \
@@ -43,27 +41,23 @@ RUN apt install -y  --no-install-recommends \
     x11-utils \
     xvfb \
     wget \
-    unzip \
     curl \
+    unzip \
     python3-netaddr \
     software-properties-common
 
 RUN add-apt-repository ppa:mozillateam/ppa
 
 # Download and install go 1.20
-#RUN wget https://mirrors.aliyun.com/golang/go1.21.4.linux-amd64.tar.gz
-#RUN tar -xvf go1.21.4.linux-amd64.tar.gz
-#RUN rm go1.21.4.linux-amd64.tar.gz
-#RUN mv go /usr/local
-RUN wget https://golang.org/dl/go1.21.4.linux-amd64.tar.gz
-RUN tar -xvf go1.21.4.linux-amd64.tar.gz
-RUN rm go1.21.4.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go1.20.linux-arm64.tar.gz
+RUN tar -xvf go1.20.linux-arm64.tar.gz
+RUN rm go1.20.linux-arm64.tar.gz
 RUN mv go /usr/local
 
 # Download geckodriver
-RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux64.tar.gz
-RUN tar -xvf geckodriver-v0.32.0-linux64.tar.gz
-RUN rm geckodriver-v0.32.0-linux64.tar.gz
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.32.0/geckodriver-v0.32.0-linux-aarch64.tar.gz
+RUN tar -xvf geckodriver-v0.32.0-linux-aarch64.tar.gz
+RUN rm geckodriver-v0.32.0-linux-aarch64.tar.gz
 RUN mv geckodriver /usr/bin
 
 # Make directory for app
@@ -74,6 +68,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Download Go packages
+RUN go install -v -v github.com/bp0lr/gauplus@latest
 RUN go install -v github.com/jaeles-project/gospider@latest
 RUN go install -v github.com/tomnomnom/gf@latest
 RUN go install -v github.com/tomnomnom/unfurl@latest
@@ -88,7 +83,7 @@ RUN go install -v github.com/jaeles-project/gospider@latest
 RUN go install -v github.com/owasp-amass/amass/v3/...@latest
 RUN go install -v github.com/ffuf/ffuf@latest
 RUN go install -v github.com/projectdiscovery/tlsx/cmd/tlsx@latest
-#RUN go install -v github.com/hahwul/dalfox/v2@latest
+RUN go install -v github.com/hahwul/dalfox/v2@latest
 RUN go install -v github.com/projectdiscovery/katana/cmd/katana@latest
 RUN go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
 RUN go install -v github.com/sa7mon/s3scanner@latest
@@ -97,18 +92,11 @@ RUN go install -v github.com/sa7mon/s3scanner@latest
 RUN nuclei -update
 RUN nuclei -update-templates
 
-# Update project discovery tools
-RUN httpx -up
-RUN naabu -up
-RUN subfinder -up
-RUN tlsx -up
-RUN katana -up
-
 # Copy requirements
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip3 install --upgrade setuptools pip && \
-    pip3 install -r /tmp/requirements.txt \
-    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip3 install -r /tmp/requirements.txt
+
 
 # install eyewitness
 
@@ -116,8 +104,7 @@ RUN python3 -m pip install fuzzywuzzy \
     selenium==4.9.1 \
     python-Levenshtein \
     pyvirtualdisplay \
-    netaddr \
-    -i https://pypi.tuna.tsinghua.edu.cn/simple
+    netaddr
 
 # Copy source code
 COPY . /usr/src/app/
