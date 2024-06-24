@@ -2490,7 +2490,7 @@ def xray_scan(self, urls=[], ctx={}, description=None):
             )
             endpoint, _ = save_endpoint(
                 http_url,
-                crawl=True,
+                crawl=False,
                 subdomain=subdomain,
                 ctx=ctx
             )
