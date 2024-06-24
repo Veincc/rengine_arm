@@ -48,17 +48,17 @@ then
   wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/deepmagic.com-prefixes-top50000.txt -O /usr/src/wordlist/deepmagic.com-prefixes-top50000.txt
 fi
 
- get Xray
+# get Xray
 if [ ! -d "/usr/src/github/Xray" ]
 then
   echo "Get Xray"
-  wget https://github.com/chaitin/xray/releases/download/1.9.11/xray_linux_arm64.zip
-  unzip xray_linux_arm64.zip -d /usr/src/github/Xray
-  mv /usr/src/github/Xray/xray_linux_arm64 /usr/src/github/Xray/xray
+  wget https://github.com/chaitin/xray/releases/download/1.9.11/xray_linux_amd64.zip
+  unzip xray_linux_amd64.zip -d /usr/src/github/Xray
+  mv /usr/src/github/Xray/xray_linux_amd64 /usr/src/github/Xray/xray
   cd /usr/src/github/Xray
   ./xray
   ./xray
-  rm xray_linux_arm64.zip
+  rm xray_linux_amd64.zip
 fi
 
 # clone Sublist3r
